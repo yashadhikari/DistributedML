@@ -26,5 +26,7 @@ if __name__ == "__main__":
     # continue to train until convergence criteria is met
     while not graph.convergence():
         graph.next_iteration()
-        break
+        
+        if graph.iteration == 40000:
+            break
     

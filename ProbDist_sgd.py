@@ -49,7 +49,7 @@ X = np.c_[np.ones((X.shape[0])), X]
 
 
 timeHistory = []
-for repititions in range(500):
+for repititions in range(1):
     # initialize our weight matrix such it has the same number of
     # columns as our input features
     print("[INFO] starting training...")
@@ -110,11 +110,13 @@ plt.plot(X, Y, "r-")
 # construct a chart of time taken for each gradient descent calculation
 plt.figure()
 plt.hist(timeHistory, bins = 1000, range = [0.000001, 0.00004])
-fig.suptitle("Histogram of Time Taken for GD")
+plt.suptitle("Histogram of Time Taken for GD")
 plt.xlabel("Time (s)")
 plt.ylabel("Frequency")
 plt.xticks(np.arange(0.000001, 0.00004, step = 0.00001))
 
+plt.figure()
+plt.plot(lossHistory)
 
 plt.show()
 
