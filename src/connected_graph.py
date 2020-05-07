@@ -42,6 +42,35 @@ class connected_graph:
         self.divide_data()
         self.indices = self.get_worker_indices()
         
+        # Get  distribution of data (does not contain probabilties)
+        self.get_distribution()
+    
+    def get_distribution(self):
+        # Load data which contain time cost as range [col 1] and # of 
+        # occurences [col 2]
+        directory = '../data/TimeCostHistogram.txt'
+        data = np.loadtxt(directory)
+        
+        # Get data in format of avg. time cost [col 1] and # occurences [col 2]
+        start = 2                          # skip first 2 rows (no occurences)
+        bins = 10
+        occurences = [i[1] for i in data]
+        self.separation = np.cumsum(occurences[start:start+bins])
+        self.avg_time_cost = [np.average([data[i-1][0], data[i][0]]) for i in range(start, start+bins)]
+        
+    def get_time_cost(self):
+        # Get the cost of computation based on the loaded distribution
+        
+        # Replace a number of if then statements with finding the proper bin
+        x = np.random.randint(0, self.separation[-1])
+        find_bin = np.where(self.separation <= x)[0]
+        
+        if len(find_bin) > 0:
+            time_cost_idx = max(find_bin)
+            return self.avg_time_cost[time_cost_idx]
+        else:
+            return self.avg_time_cost[0]
+    
     def next_iteration(self):
         # Update parameters first, calculate SGD at each worker while adding 
         # time to time_cost_xxx, pass the updates to the appropriate worker(s)
@@ -52,9 +81,11 @@ class connected_graph:
         
         self.iteration += 1
         
+        
         if self.iteration % len(self.X[0]) == 0:
             self.epochloss.append(np.average(self.loss[-len(self.X[0]):]))
-            print('Epoch: ', self.iteration/len(self.X[0]), ' Epoch Loss: ', self.epochloss[-1])
+            # print epoch loss if necessary
+            # print('Epoch: ', self.iteration/len(self.X[0]), ' Epoch Loss: ', self.epochloss[-1])
     
     def update_params(self):
         self.params += self.updates
@@ -62,21 +93,32 @@ class connected_graph:
     def calculate_SGD(self):
         # calculates gradients and loss at each worker
         
+        # must kep track of time cost for each worker
+        worker_computation_cost = np.zeros(self.nodes)
+        
         for i in range(self.nodes):
             l, grad = self.model.calculate_grad(self.X[i][self.data_index[i]:self.data_index[i]+1], self.y[i][self.data_index[i]:self.data_index[i]+1], self.params[i])
             self.loss.append(l)
             self.grads[i] = grad
             self.get_next_data_index(i)
             
-            
-    
+            worker_computation_cost[i] = self.get_time_cost()
+        
+        # Since we are in parallel we default to computation that takes the 
+        # maximum amount of time
+        self.time_cost_processing += max(worker_computation_cost)
+        
     def send_updates(self):
         # At each worker get index for which other workers to send updates to
         # Then update parameters at the selected workers
         
+        # Add to communciation cost while sending updates
+        cost_per_update = 9e-7
+        
         self.updates = np.zeros_like(self.updates)
         for i in range(self.nodes):
             self.updates[self.indices[i]] += -self.alpha * self.grads[i]
+            self.time_cost_comm += cost_per_update * self.outdegree
     
     def get_worker_indices(self):
         # We say that updates are passed to the next n connections where n is 
@@ -129,7 +171,10 @@ class connected_graph:
             self.y[-2] = np.concatenate((self.y[-2], self.y[-1]))
             self.y.pop()
         elif len(self.X) == self.nodes:
-            print('Evenly distributed data')
+            
+            # For debugging if necessary
+            # print('Evenly distributed data')
+            pass
         else:
             print('eror in distributing data to each worker')
     
