@@ -3,14 +3,14 @@
 @author: ayash
 """
 import numpy as np
-
+import matplotlib.pyplot as plt
 from svm import svm
 
 class connected_graph:
     
     
     
-    def __init__(self, data, parameters, nodes = 10, connections = 1):
+    def __init__(self, data, parameters, nodes = 10, connections = 2):
         
         # define the model we are working with
         self.model = svm()
@@ -113,7 +113,7 @@ class connected_graph:
         # Then update parameters at the selected workers
         
         # Add to communciation cost while sending updates
-        cost_per_update = 9e-7
+        cost_per_update = 7e-7
         
         self.updates = np.zeros_like(self.updates)
         for i in range(self.nodes):

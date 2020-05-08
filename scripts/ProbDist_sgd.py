@@ -49,7 +49,7 @@ X = np.c_[np.ones((X.shape[0])), X]
 
 
 timeHistory = []
-for repititions in range(1):
+for repititions in range(50len):
     # initialize our weight matrix such it has the same number of
     # columns as our input features
     print("[INFO] starting training...")
