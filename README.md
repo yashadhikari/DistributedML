@@ -8,4 +8,5 @@ Steps Taken:
 4. Compare different scehemes for performance such as averag time to convergence and average final epoch loss
 
 Project report with explanation of the architecture and findings have been presented in the PDF file named below.
+
 Exploration of Various Distributed Machine Learning Schemes.pdf
